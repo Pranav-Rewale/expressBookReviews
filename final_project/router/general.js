@@ -86,19 +86,33 @@ public_users.get('/author/:author', async function (req, res) {
 });
 
 // Get all books based on title
-public_users.get('/title/:title', function (req, res) {
+public_users.get('/title/:title', async function (req, res) {
     const title = req.params.title;
-    let filteredBooks = {};
 
-    let keys = Object.keys(books);
+    try {
+        const filteredBooks = await new Promise((resolve, reject) => {
+            let result = {};
 
-    keys.forEach(key => {
-        if (books[key].title === title) {
-            filteredBooks[key] = books[key];
-        }
-    });
+            let keys = Object.keys(books);
 
-    return res.send(JSON.stringify(filteredBooks, null, 4));
+            keys.forEach(key => {
+                if (books[key].title === title) {
+                    result[key] = books[key];
+                }
+            });
+
+            if (Object.keys(result).length > 0) {
+                resolve(result);
+            } else {
+                reject("No books found with this title");
+            }
+        });
+
+        return res.send(JSON.stringify(filteredBooks, null, 4));
+
+    } catch (error) {
+        return res.status(404).json({ message: error });
+    }
 });
 
 //  Get book review
